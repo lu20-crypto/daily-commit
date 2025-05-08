@@ -1,0 +1,46 @@
+name: Auto Commit (3 Times/Day with Random Delay)
+
+on:
+  push:
+    branches: [ "main" ]
+  
+  schedule:
+    # 3 khung giờ cố định: 0h, 8h, 16h UTC (7h, 15h, 23h GMT+7)
+    - cron: "0 0 * * *"   # Khung 0-6h UTC
+    - cron: "0 8 * * *"   # Khung 8-14h UTC
+    - cron: "0 16 * * *"  # Khung 16-22h UTC
+
+jobs:
+  auto-commit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360  # Tối đa 6 tiếng cho mỗi job
+    
+    steps:
+      # Bước 1: Tạo random delay 0-6 tiếng
+      - name: Add Random Delay
+        run: |
+          MAX_DELAY=$((6 * 3600))  # 6 tiếng = 21600 giây
+          RANDOM_DELAY=$(( RANDOM % MAX_DELAY ))
+          echo "🕒 Delaying for $((RANDOM_DELAY / 60)) minutes"
+          sleep $RANDOM_DELAY
+
+      # Bước 2: Checkout code
+      - uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      # Bước 3: Chạy script
+      - name: Run Bot Task
+        run: |
+          chmod +x ./task.sh
+          ./task.sh
+
+      # Bước 4: Push changes
+      - name: GitHub Push
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
+          force: true
+          directory: "."
