@@ -1,4 +1,4 @@
-name: Auto Commit (3 Times/Day with Random Delay)
+name: Test Auto Commit (3 Times/Day with Random Delay)
 
 on:
   push:
